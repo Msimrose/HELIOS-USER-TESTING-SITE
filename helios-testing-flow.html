@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="Helios · User Testing">
+<meta property="og:description" content="Help test the Helios circadian lighting app. 15 minutes, anonymous.">
+<meta property="og:type" content="website">
+<title>HELIOS · User Testing</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;
+  background:#000;color:#fff;min-height:100vh;min-height:100dvh;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;-webkit-overflow-scrolling:touch;
+  padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)
+}
+
+.progress{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;height:3px;background:rgba(255,255,255,0.04);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,#C42B1A,#D94425,#E87830,#F0A030,#FFBD40);transition:width 0.5s ease;width:0%}
+
+.dots{position:fixed;top:50%;right:14px;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:99}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;cursor:pointer;padding:0;transition:all 0.3s}
+.dot.on{background:#fff;transform:scale(1.8)}.dot.past{background:rgba(255,255,255,0.4)}
+
+.sec{min-height:100vh;display:none;flex-direction:column;justify-content:center;padding:60px 20px;max-width:600px;margin:0 auto;animation:up 0.45s ease-out}
+.sec.on{display:flex}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.logo{height:16px;margin-bottom:36px;opacity:0.85}
+.logo-lg{height:28px;margin-bottom:20px}
+
+h1{font-weight:300;font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.2;margin-bottom:14px;letter-spacing:-0.02em}
+h2{font-weight:600;font-size:clamp(1.15rem,3.5vw,1.5rem);line-height:1.25;margin-bottom:10px;letter-spacing:-0.01em}
+.step{font-size:10px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:24px}
+p{color:rgba(255,255,255,0.55);margin-bottom:14px;font-size:0.88rem;font-weight:300}
+.mute{color:rgba(255,255,255,0.3)}
+
+.glass{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:20px;margin-bottom:14px}
+.glass-s{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:24px;margin-bottom:14px}
+
+.phase{height:2px;border-radius:1px;background:linear-gradient(90deg,#C42B1A,#D94425,#E87830,#F0A030,#FFBD40);margin:24px 0;opacity:0.35}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;min-height:44px;border:none;border-radius:12px;font-family:inherit;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none}
+.btn-w{background:#fff;color:#000}.btn-w:hover,.btn-w:active{transform:scale(0.97);opacity:0.9}
+.btn-o{background:transparent;color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.10)}.btn-o:hover,.btn-o:active{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7)}
+.tf-wrap{position:relative;border-radius:14px;margin:10px 0 14px;padding:1px}
+.tf-wrap::before{content:'';position:absolute;inset:0;border-radius:14px;background:conic-gradient(from var(--tf-angle,0deg),rgba(26,8,0,0.4),rgba(107,21,16,0.5),rgba(196,43,26,0.45),rgba(217,68,37,0.5),rgba(232,120,48,0.5),rgba(240,160,48,0.45),rgba(255,189,64,0.5),rgba(240,160,48,0.45),rgba(232,120,48,0.5),rgba(196,43,26,0.45),rgba(107,21,16,0.5),rgba(26,8,0,0.4));animation:tfSpin 8s linear infinite;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1px;pointer-events:none}
+.tf-wrap::after{content:'';position:absolute;inset:-6px;border-radius:20px;background:conic-gradient(from var(--tf-angle,0deg),transparent 25%,rgba(196,43,26,0.15) 35%,rgba(232,120,48,0.2) 45%,rgba(255,189,64,0.18) 50%,rgba(232,120,48,0.2) 55%,rgba(196,43,26,0.15) 65%,transparent 75%);filter:blur(8px);animation:tfSpin 8s linear infinite;pointer-events:none}
+@property --tf-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes tfSpin{to{--tf-angle:360deg}}
+@keyframes tfSpinFallback{to{transform:rotate(360deg)}}
+.tf-no-houdini .tf-wrap::before,.tf-no-houdini .tf-wrap::after{animation:tfSpinFallback 8s linear infinite}
+.btn-tf{position:relative;z-index:1;width:100%;background:transparent;border:none;border-radius:13px;color:rgba(255,255,255,0.7);font-weight:400;letter-spacing:0.04em;font-size:0.82rem;font-family:inherit;transition:all 0.3s ease;cursor:pointer;text-decoration:none;display:flex;justify-content:center;align-items:center;padding:14px 24px}.btn-tf:hover{color:rgba(255,255,255,0.9)}
+.btns{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap}
+
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:0.76rem;font-weight:500;color:rgba(255,255,255,0.55);margin-bottom:7px}
+.fg input[type="text"],.fg input[type="email"]{width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:10px;color:#fff;font-family:inherit;font-size:16px;font-weight:300;outline:none;transition:border 0.3s;-webkit-appearance:none;appearance:none}
+.fg input:focus{border-color:rgba(255,255,255,0.25)}
+.fg textarea{width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:10px;color:#fff;font-family:inherit;font-size:16px;font-weight:300;resize:vertical;min-height:68px;outline:none;transition:border 0.3s;-webkit-appearance:none;appearance:none}
+.fg textarea:focus{border-color:rgba(255,255,255,0.25)}
+
+.lq{margin-bottom:24px}
+.qt{font-size:0.85rem;font-weight:400;color:rgba(255,255,255,0.8);margin-bottom:10px;line-height:1.5}
+.qi{color:rgba(255,255,255,0.2);font-weight:600;font-size:0.72rem;margin-right:6px}
+.lr{display:flex;width:100%}
+.lr label{flex:1;text-align:center;cursor:pointer}
+.lr input{display:none}
+.lc{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:8px;min-height:44px}
+.ld{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.10);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.2);transition:all 0.2s}
+.ll{font-size:0.52rem;color:rgba(255,255,255,0.2);line-height:1.2;max-width:52px}
+.lr input:checked+.lc .ld{border-color:#fff;background:#fff;color:#000}
+.lr label:hover .ld{border-color:rgba(255,255,255,0.25)}
+
+.ci{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px;cursor:pointer;min-height:44px;padding:4px 0}
+.ci input{width:20px;height:20px;accent-color:#fff;flex-shrink:0;margin-top:2px}
+.ci span{font-size:0.84rem;color:rgba(255,255,255,0.55);font-weight:300;line-height:1.45}
+
+.sw{border:1px solid rgba(255,255,255,0.10);border-radius:12px;background:rgba(255,255,255,0.03);position:relative;overflow:hidden;margin-bottom:8px;touch-action:none}
+.sw canvas{display:block;width:100%;height:120px;cursor:crosshair;touch-action:none}
+.sh{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.15);font-size:0.78rem;font-weight:300;pointer-events:none;transition:opacity 0.3s}
+.sc{position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:inherit;font-size:0.65rem;padding:3px 10px;border-radius:6px;cursor:pointer}
+
+.tl{list-style:none;margin:18px 0}
+.tl li{padding:14px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.tn{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.68rem;flex-shrink:0;color:rgba(255,255,255,0.4)}
+.tb{flex:1}.tb strong{color:#fff;font-size:0.85rem;font-weight:600;display:block;margin-bottom:3px}.tb p{margin:0;font-size:0.78rem;color:rgba(255,255,255,0.35);font-weight:300}
+
+.qh{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+
+.err{color:#FF4444;font-size:0.78rem;margin-top:6px;display:none}.err.show{display:block}
+
+@media(max-width:480px){.sec{padding:36px 16px}.ll{font-size:0.48rem}.ld{width:32px;height:32px;font-size:0.65rem}.dots{display:none}.btns{flex-direction:column}.btn{width:100%;justify-content:center}}
+@supports not (font-size: 1dvh){body{min-height:100vh;min-height:-webkit-fill-available}}
+@media(max-height:500px){.sec{min-height:auto;padding:24px 16px}}
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="pf"></div></div>
+<div class="dots" id="dots"></div>
+
+<!-- 0: WELCOME -->
+<div class="sec on" id="s0">
+<div>
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" class="logo">
+  <h1>Test the Helios app</h1>
+  <div class="phase"></div>
+  <p>Helios is a circadian lighting system. A smart lamp that shifts its brightness and color temperature throughout the day to match your natural rhythm. This is the iOS app that controls it.</p>
+  <p>You're testing the app interface only. No physical lamp needed, the app includes a live lamp render that responds to every change you make.</p>
+  <div class="glass" style="margin-top:16px;">
+    <p style="margin:0;color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:400;line-height:1.55;">Install via TestFlight, try 6 tasks, answer a short questionnaire. <span style="color:#fff">10 to 15 minutes</span>, anonymous.</p>
+  </div>
+  <div class="glass" style="margin-top:0;">
+    <p style="margin:0;color:rgba(255,255,255,0.8);font-size:0.84rem;font-weight:500;">You'll need</p>
+    <p style="margin:6px 0 0;">iPhone, iOS 16+, 15 minutes.</p>
+  </div>
+  <div class="btns"><button class="btn btn-w" onclick="go(1)">Get started</button></div>
+</div>
+</div>
+
+<!-- 1: CONSENT -->
+<div class="sec" id="s1">
+<div>
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" class="logo">
+  <div class="step">Step 1 of 5 · Consent</div>
+  <h2>Consent</h2>
+
+  <div class="glass-s">
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.8);font-weight:600;margin-bottom:14px;">Helios · Remote App Testing</p>
+    <p><span style="color:rgba(255,255,255,0.8)">Researcher:</span> Micah Simrose, Product Design, KPU</p>
+    <p><span style="color:rgba(255,255,255,0.8)">What:</span> Install Helios via TestFlight, do 6 tasks (~5 min), fill a questionnaire (~5 min). App interface only, no hardware. The app includes a live lamp simulation so you can see what the light would look like.</p>
+    <p><span style="color:rgba(255,255,255,0.8)">Risk:</span> Minimal. Just a mobile app on your device.</p>
+    <p><span style="color:rgba(255,255,255,0.8)">Data:</span> Anonymous. Used only for capstone research.</p>
+    <p style="margin:0;"><span style="color:rgba(255,255,255,0.8)">Voluntary.</span> Stop any time.</p>
+  </div>
+
+  <div style="margin:18px 0;">
+    <label class="ci"><input type="checkbox" id="c1"><span>I have read and understand the above</span></label>
+    <label class="ci"><input type="checkbox" id="c2"><span>Participation is voluntary</span></label>
+    <label class="ci"><input type="checkbox" id="c3"><span>I consent to participate</span></label>
+  </div>
+
+  <div class="fg"><label>Full name</label><input type="text" id="cN" placeholder="Your name" autocomplete="name"></div>
+  <div class="fg"><label>Email (optional)</label><input type="email" id="cE" placeholder="your@email.com" autocomplete="email"></div>
+  <div class="fg">
+    <label>Signature</label>
+    <div class="sw" id="sigW">
+      <canvas id="sigC" width="800" height="200"></canvas>
+      <span class="sh" id="sigH">Sign here</span>
+      <button class="sc" onclick="clrSig()">Clear</button>
+    </div>
+    <p class="mute" style="font-size:0.72rem;margin:0;">Draw with finger or mouse</p>
+  </div>
+
+  <div class="err" id="cErr">Check all boxes, enter your name, and sign.</div>
+  <div class="btns">
+    <button class="btn btn-o" onclick="go(0)">Back</button>
+    <button class="btn btn-w" onclick="valC()">Continue</button>
+  </div>
+</div>
+</div>
+
+<!-- 2: INSTALL -->
+<div class="sec" id="s2">
+<div>
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" class="logo">
+  <div class="step">Step 2 of 5 · Install</div>
+  <h2>Install Helios</h2>
+  <div class="tf-wrap">
+    <a href="https://testflight.apple.com/join/YOUR_CODE" target="_blank" id="tfLink" class="btn-tf">Install via TestFlight</a>
+  </div>
+  <ol class="tl">
+    <li><span class="tn">1</span><div class="tb"><strong>Get TestFlight</strong><p><a href="https://apps.apple.com/app/testflight/id899247664" style="color:rgba(255,255,255,0.5)" target="_blank">App Store</a>, free, by Apple.</p></div></li>
+    <li><span class="tn">2</span><div class="tb"><strong>Tap the button above</strong><p>Opens TestFlight with the Helios invite.</p></div></li>
+    <li><span class="tn">3</span><div class="tb"><strong>Accept & install</strong><p>Tap Accept → Install.</p></div></li>
+    <li><span class="tn">4</span><div class="tb"><strong>Open Helios</strong><p>You'll see the circadian arc and controls.</p></div></li>
+  </ol>
+  <div class="glass" style="border-color:rgba(255,140,66,0.12);background:rgba(255,140,66,0.03);">
+    <p style="margin:0 0 8px;color:rgba(255,255,255,0.7);font-size:0.82rem;">No physical lamp connected. The app simulates the light output on screen. You'll see a floating lamp widget in the corner that reacts to everything you do: scenes, brightness, color temperature.</p>
+    <p style="margin:0;color:rgba(255,255,255,0.45);font-size:0.76rem;">You can drag the widget around and long-press it to resize.</p>
+  </div>
+  <div class="btns">
+    <button class="btn btn-o" onclick="go(1)">Back</button>
+    <button class="btn btn-w" onclick="go(3)">Installed, next</button>
+  </div>
+</div>
+</div>
+
+<!-- 3: TASKS -->
+<div class="sec" id="s3">
+<div>
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" class="logo">
+  <div class="step">Step 3 of 5 · Test</div>
+  <h2>Tasks</h2>
+  <p>Do these in the app. Watch the lamp render and floating widget react to each change.</p>
+  <ol class="tl">
+    <li><span class="tn">1</span><div class="tb"><strong>Power</strong><p>Turn the light on and off. Watch the lamp render respond.</p></div></li>
+    <li><span class="tn">2</span><div class="tb"><strong>Brightness</strong><p>Drag the brightness slider. The lamp and widget glow update live.</p></div></li>
+    <li><span class="tn">3</span><div class="tb"><strong>Colour temperature</strong><p>Slide between warm and cool. Notice the color shift.</p></div></li>
+    <li><span class="tn">4</span><div class="tb"><strong>Scenes</strong><p>Try at least 3 presets. Each sets a different mood and brightness.</p></div></li>
+    <li><span class="tn">5</span><div class="tb"><strong>Schedule</strong><p>Open the Schedule tab. Browse the phase cards from Sunrise to Night.</p></div></li>
+    <li><span class="tn">6</span><div class="tb"><strong>Widget</strong><p>Drag the floating lamp widget to a different corner. Long-press to resize it.</p></div></li>
+  </ol>
+  <div class="btns">
+    <button class="btn btn-o" onclick="go(2)">Back</button>
+    <button class="btn btn-w" onclick="go(4)">Done, questionnaire</button>
+  </div>
+</div>
+</div>
+
+<!-- 4: QUESTIONNAIRE -->
+<div class="sec" id="s4">
+<div>
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" class="logo">
+  <div class="step">Step 4 of 5 · Feedback</div>
+  <h2>Questionnaire</h2>
+  <p>Rate each statement.</p>
+  <div id="qs"></div>
+
+  <div class="glass-s" style="margin-top:18px;">
+    <div class="qh">Open-ended</div>
+    <div class="fg"><label>What did you like most?</label><textarea id="o1"></textarea></div>
+    <div class="fg"><label>What would you change?</label><textarea id="o2"></textarea></div>
+    <div class="fg"><label>Anything confusing?</label><textarea id="o3"></textarea></div>
+    <div class="fg" style="margin:0;"><label>Would you use this at home? Why?</label><textarea id="o4"></textarea></div>
+  </div>
+
+  <div class="btns">
+    <button class="btn btn-o" onclick="go(3)">Back</button>
+    <button class="btn btn-w" id="submitBtn" onclick="submit()">Submit</button>
+  </div>
+</div>
+</div>
+
+<!-- 5: DONE -->
+<div class="sec" id="s5">
+<div style="text-align:center;">
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNjcuMTIgNTMuNjgiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+CiAgICA8Zz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMCwxLjAzaDIwLjY0djE3LjI1aDEyLjI0VjEuMDNoMjAuNjR2NTEuNjFoLTIwLjY0di0xOC4xNGgtMTIuMjR2MTguMTRIMFYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MC40NiwxLjAzaDQzLjA2djEyLjk4aC0yNC42M3Y2LjU2aDIyLjEydjEyLjI0aC0yMi4xMnY2Ljg2aDI0LjYzdjEyLjk4aC00My4wNlYxLjAzWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTAuNDUsMS4wM2gxNS4wNHYzOS4yM2gyNC4xOHYxMi4zOWgtMzkuMjNWMS4wM1oiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTU2LjIzLDEuMDNoMTAuMDN2NTEuNjFoLTEwLjAzVjEuMDNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE3NS4zMywyNi44NGMwLTE1LjI2LDExLjcyLTI2Ljg0LDI3LjEzLTI2Ljg0czI3LjEzLDExLjU4LDI3LjEzLDI2Ljg0LTExLjcyLDI2Ljg0LTI3LjEzLDI2Ljg0LTI3LjEzLTExLjU4LTI3LjEzLTI2Ljg0Wk0yMjEuMTksMjYuODRjMC0xMS4yMS03Ljk2LTE5LjQ2LTE4LjczLTE5LjQ2cy0xOC43Myw4LjI2LTE4LjczLDE5LjQ2LDcuOTYsMTkuNDYsMTguNzMsMTkuNDYsMTguNzMtOC4yNiwxOC43My0xOS40NloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMjM2LjUzLDQ5LjE4di04Ljc3YzMuMTcsMy42MSw3Ljg5LDUuOSwxMi45OCw1LjksNS42LDAsOS42Ni0yLjgsOS42Ni03LjY3LDAtMy4wMi0xLjctNS42LTYuMTItNy4xNWwtNC41Ny0xLjYyYy04LjA0LTIuODgtMTEuMjEtNy42Ny0xMS4yMS0xNC4xNiwwLTkuNTksNy41Mi0xNS43LDE3LjQtMTUuNyw0Ljk0LDAsOS41OCwxLjU1LDEyLjQ2LDQuMDZ2OC42M2MtMy4wMi0zLjMyLTcuNDUtNS4zMS0xMi4xNy01LjMxLTUuNjgsMC05LjczLDIuOC05LjczLDcuNzQsMCwzLjEsMS42Miw1LjQ2LDUuOTcsN2w0LjU3LDEuNjJjOC4xMSwyLjg4LDExLjM1LDcuNzQsMTEuMzUsMTQuMjMsMCw5LjU5LTcuNTIsMTUuNy0xNy41NSwxNS43LTUuMzgsMC0xMC4yNS0xLjctMTMuMDUtNC41WiIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="HELIOS" style="height:32px;display:block;margin:0 auto 28px;opacity:0.9;">
+  <p style="font-size:1.05rem;font-weight:300;color:rgba(255,255,255,0.55);margin-bottom:0;letter-spacing:0.01em;">Thanks</p>
+  <div class="phase" style="max-width:120px;margin:20px auto 24px;"></div>
+  <p class="mute" style="font-size:0.78rem;">Responses submitted. You can close this page.</p>
+</div>
+</div>
+
+<script>
+const T=6;let cur=0,sgn=false;
+const FORMSPREE_ID="xlgpwqad";
+
+// Trimmed questions — removed B3, trimmed F and G
+const S=[
+  {h:"First impressions",q:[
+    ["a1","The app looked visually appealing."],
+    ["a2","I immediately understood what the app was for."],
+    ["a3","The dark design felt appropriate."]
+  ]},
+  {h:"Power & brightness",q:[
+    ["b1","The power button was easy to find."],
+    ["b2","The brightness slider worked as expected."]
+  ]},
+  {h:"Colour temperature",q:[
+    ["c1","The colour temperature control was easy to understand."],
+    ["c2","I could tell the difference between warm and cool."]
+  ]},
+  {h:"Scenes",q:[
+    ["d1","Scene options were easy to find."],
+    ["d2","Scene names predicted the lighting well."],
+    ["d3","Switching scenes felt responsive."]
+  ]},
+  {h:"Schedule",q:[
+    ["e1","The schedule screen was easy to understand."],
+    ["e2","Phase cards made the daily cycle clear."]
+  ]},
+  {h:"Overall",q:[
+    ["f1","The app was easy to use."],
+    ["f2","The app felt polished."],
+    ["f3","I would use this at home."]
+  ]},
+  {h:"Communication",sub:"How well the app conveys what the light would feel like.",q:[
+    ["g1","Each mode's feel was clearly communicated."],
+    ["g2","Scene icons conveyed the right mood."],
+    ["g3","The app made me curious about the actual light."]
+  ]}
+];
+const SL=["Strongly<br>Disagree","Disagree","Neutral","Agree","Strongly<br>Agree"];
+
+function buildQ(){
+  const c=document.getElementById("qs");let h="";
+  S.forEach(s=>{
+    h+='<div class="glass-s" style="margin-top:14px;"><div class="qh">'+s.h+"</div>";
+    if(s.sub) h+='<p style="font-size:0.76rem;color:rgba(255,255,255,0.25);margin-bottom:14px;">'+s.sub+"</p>";
+    s.q.forEach(([id,txt])=>{
+      h+='<div class="lq"><div class="qt"><span class="qi">'+id.toUpperCase()+"</span>"+txt+"</div><div class=\"lr\">";
+      for(let i=1;i<=5;i++) h+='<label><input type="radio" name="q_'+id+'" value="'+i+'"><div class="lc"><div class="ld">'+i+'</div><span class="ll">'+SL[i-1]+"</span></div></label>";
+      h+="</div></div>";
+    });
+    if(s.h==="Scenes") h+='<div class="fg" style="margin-top:6px;"><label>Favourite scene and why?</label><textarea id="sp"></textarea></div>';
+    h+="</div>";
+  });
+  c.innerHTML=h;
+}
+buildQ();
+
+function buildD(){const n=document.getElementById("dots");for(let i=0;i<T;i++){const d=document.createElement("button");d.className="dot"+(i===0?" on":"");d.onclick=()=>{if(i<=cur)go(i)};n.appendChild(d)}}
+buildD();
+
+function go(n){
+  document.getElementById("s"+cur).classList.remove("on");
+  document.getElementById("s"+n).classList.add("on");cur=n;
+  document.getElementById("pf").style.width=((n/(T-1))*100)+"%";
+  document.querySelectorAll(".dot").forEach((d,i)=>{d.classList.remove("on","past");if(i<n)d.classList.add("past");if(i===n)d.classList.add("on")});
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(n===1)setTimeout(initSig,100);
+}
+
+function valC(){
+  const ok=document.getElementById("c1").checked&&document.getElementById("c2").checked&&document.getElementById("c3").checked&&document.getElementById("cN").value.trim()&&sgn;
+  document.getElementById("cErr").classList.toggle("show",!ok);
+  if(ok)go(2);
+}
+
+const cv=document.getElementById("sigC"),cx=cv.getContext("2d");let dw=false;
+function initSig(){const w=document.getElementById("sigW"),r=w.getBoundingClientRect();cv.width=r.width*2;cv.height=240;cv.style.height="120px";cx.scale(2,2);cx.strokeStyle="#fff";cx.lineWidth=1.5;cx.lineCap="round";cx.lineJoin="round"}
+function gp(e){const r=cv.getBoundingClientRect();const x=e.touches?e.touches[0].clientX:e.clientX;const y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top}}
+cv.addEventListener("pointerdown",e=>{e.preventDefault();dw=true;const p=gp(e);cx.beginPath();cx.moveTo(p.x,p.y);document.getElementById("sigH").style.opacity="0"});
+cv.addEventListener("pointermove",e=>{if(!dw)return;e.preventDefault();const p=gp(e);cx.lineTo(p.x,p.y);cx.stroke()});
+cv.addEventListener("pointerup",()=>{dw=false;sgn=true});
+cv.addEventListener("pointerleave",()=>{dw=false});
+function clrSig(){cx.clearRect(0,0,cv.width,cv.height);document.getElementById("sigH").style.opacity="1";sgn=false}
+window.addEventListener("load",()=>setTimeout(initSig,200));
+window.addEventListener("resize",initSig);
+
+// Houdini @property fallback for Instagram in-app browser
+(function(){
+  try{
+    if(!CSS||!CSS.registerProperty){throw 0}
+    CSS.registerProperty({name:'--tf-test',syntax:'<angle>',initialValue:'0deg',inherits:false});
+  }catch(e){
+    document.documentElement.classList.add('tf-no-houdini');
+  }
+})();
+
+// Enable :active states on iOS Safari (requires touchstart listener)
+document.addEventListener('touchstart',function(){},{passive:true});
+
+async function submit(){
+  const btn=document.getElementById("submitBtn");
+  btn.textContent="Submitting...";btn.style.opacity="0.5";btn.style.pointerEvents="none";
+  const data={
+    _subject:"Helios Test — "+(document.getElementById("cN").value||"Anonymous"),
+    name:document.getElementById("cN").value,
+    email:document.getElementById("cE").value,
+    timestamp:new Date().toISOString()
+  };
+  S.forEach(s=>s.q.forEach(([id])=>{
+    const sel=document.querySelector('input[name="q_'+id+'"]:checked');
+    data["rating_"+id.toUpperCase()]=sel?sel.value:"—";
+  }));
+  data.scene_preference=(document.getElementById("sp")||{}).value||"";
+  data.liked_most=document.getElementById("o1").value||"";
+  data.would_change=document.getElementById("o2").value||"";
+  data.confusing=document.getElementById("o3").value||"";
+  data.would_use=document.getElementById("o4").value||"";
+
+  try{
+    const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
+      method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify(data)
+    });
+    if(res.ok){go(5);return}
+  }catch(e){}
+  // Fallback
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="helios-"+Date.now()+".json";a.click();URL.revokeObjectURL(url);
+  go(5);
+}
+</script>
+</body>
+</html>
