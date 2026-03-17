@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Helios — Signature</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:#0a0a0a;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    .card{
+      background:#141414;
+      border:1px solid #2a2a2a;
+      border-radius:16px;
+      padding:24px;
+      max-width:520px;
+      width:100%;
+    }
+    .label{
+      color:#666;
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-bottom:12px;
+    }
+    .sig-wrap{
+      background:#fff;
+      border-radius:10px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:120px;
+    }
+    img{
+      max-width:100%;
+      display:block;
+    }
+    .err{
+      color:#f05;
+      font-size:14px;
+      text-align:center;
+      padding:20px;
+    }
+    .foot{
+      margin-top:16px;
+      color:#444;
+      font-size:12px;
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="label">Participant Signature</div>
+    <div class="sig-wrap" id="wrap">
+      <div class="err" id="msg">Loading…</div>
+    </div>
+    <div class="foot">Helios User Testing</div>
+  </div>
+  <script>
+    const hash = location.hash.slice(1);
+    const wrap = document.getElementById("wrap");
+    const msg  = document.getElementById("msg");
+    if(!hash){
+      msg.textContent = "No signature data found.";
+    } else {
+      try {
+        const src = decodeURIComponent(hash);
+        if(!src.startsWith("data:image/")){throw new Error("bad data");}
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "Participant signature";
+        img.onload = ()=>{ msg.remove(); wrap.appendChild(img); };
+        img.onerror = ()=>{ msg.textContent = "Could not render signature."; };
+      } catch(e){
+        msg.textContent = "Invalid signature data.";
+      }
+    }
+  </script>
+</body>
+</html>
