@@ -360,7 +360,6 @@ window.addEventListener("resize",initSig);
 document.addEventListener('touchstart',function(){},{passive:true});
 
 function sigViewerURL(){
-  // Use a small canvas + JPEG to keep the URL under ~15KB
   const out=document.createElement("canvas");
   out.width=280;out.height=80;
   const octx=out.getContext("2d");
@@ -371,15 +370,26 @@ function sigViewerURL(){
   return"https://helios-user-testing.vercel.app/sig-viewer.html#"+encodeURIComponent(b64);
 }
 
+async function postJSON(payload){
+  const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
+    method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok) throw new Error("Server error "+res.status);
+}
+
 async function submit(){
   const btn=document.getElementById("submitBtn");
   btn.textContent="Submitting...";btn.style.opacity="0.5";btn.style.pointerEvents="none";
+  const name=document.getElementById("cN").value;
 
+  // --- Submission 1: all questionnaire data (no signature image) ---
   const data={
-    _subject:"Helios Test — "+(document.getElementById("cN").value||"Anonymous"),
-    name:document.getElementById("cN").value,
+    _subject:"Helios Test — "+(name||"Anonymous"),
+    name,
     email:document.getElementById("cE").value,
-    timestamp:new Date().toISOString()
+    timestamp:new Date().toISOString(),
+    signature_captured:sgn?"Yes":"No"
   };
   S.forEach(s=>s.q.forEach(([id])=>{
     const sel=document.querySelector('input[name="q_'+id+'"]:checked');
@@ -390,23 +400,31 @@ async function submit(){
   data.would_change=document.getElementById("o2").value||"";
   data.confusing=document.getElementById("o3").value||"";
   data.would_use=document.getElementById("o4").value||"";
-  data.signature_captured=sgn?"Yes":"No";
-  if(sgn&&sigData) data.signature_url=sigViewerURL();
 
   try{
-    const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
-      method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify(data)
-    });
-    if(res.ok){go(5);return}
-    // Formspree returned an error — show it to the user
-    throw new Error("Server error "+res.status);
+    await postJSON(data);
   }catch(e){
     btn.textContent="Submit";
-    btn.style.opacity="1";
-    btn.style.pointerEvents="auto";
+    btn.style.opacity="1";btn.style.pointerEvents="auto";
     alert("Submission failed — please check your connection and try again.");
+    return;
   }
+
+  // --- Submission 2: signature only (sent separately to avoid size limits) ---
+  if(sgn&&sigData){
+    try{
+      await postJSON({
+        _subject:"Helios Signature — "+(name||"Anonymous"),
+        name,
+        signature_url:sigViewerURL()
+      });
+    }catch(e){
+      // Signature upload failed — main data already saved, so just continue
+      console.warn("Signature submission failed:",e.message);
+    }
+  }
+
+  go(5);
 }
 </script>
 </body>
