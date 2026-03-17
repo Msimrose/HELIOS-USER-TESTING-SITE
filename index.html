@@ -335,14 +335,14 @@ function valC(){
   if(ok)go(2);
 }
 
-const cv=document.getElementById("sigC"),cx=cv.getContext("2d");let dw=false;
+const cv=document.getElementById("sigC"),cx=cv.getContext("2d");let dw=false,sigData="";
 function initSig(){const w=document.getElementById("sigW"),r=w.getBoundingClientRect();cv.width=r.width*2;cv.height=240;cv.style.height="120px";cx.scale(2,2);cx.strokeStyle="#fff";cx.lineWidth=1.5;cx.lineCap="round";cx.lineJoin="round"}
 function gp(e){const r=cv.getBoundingClientRect();const x=e.touches?e.touches[0].clientX:e.clientX;const y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top}}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();dw=true;const p=gp(e);cx.beginPath();cx.moveTo(p.x,p.y);document.getElementById("sigH").style.opacity="0"});
 cv.addEventListener("pointermove",e=>{if(!dw)return;e.preventDefault();const p=gp(e);cx.lineTo(p.x,p.y);cx.stroke()});
-cv.addEventListener("pointerup",()=>{dw=false;sgn=true});
-cv.addEventListener("pointerleave",()=>{dw=false});
-function clrSig(){cx.clearRect(0,0,cv.width,cv.height);document.getElementById("sigH").style.opacity="1";sgn=false}
+cv.addEventListener("pointerup",()=>{dw=false;sgn=true;sigData=cv.toDataURL("image/png");});
+cv.addEventListener("pointerleave",()=>{if(dw&&sgn)sigData=cv.toDataURL("image/png");dw=false;});
+function clrSig(){cx.clearRect(0,0,cv.width,cv.height);document.getElementById("sigH").style.opacity="1";sgn=false;sigData=""}
 window.addEventListener("load",()=>setTimeout(initSig,200));
 window.addEventListener("resize",initSig);
 
@@ -362,33 +362,43 @@ document.addEventListener('touchstart',function(){},{passive:true});
 async function submit(){
   const btn=document.getElementById("submitBtn");
   btn.textContent="Submitting...";btn.style.opacity="0.5";btn.style.pointerEvents="none";
-  const data={
-    _subject:"Helios Test — "+(document.getElementById("cN").value||"Anonymous"),
-    name:document.getElementById("cN").value,
-    email:document.getElementById("cE").value,
-    timestamp:new Date().toISOString()
-  };
+
+  // Build FormData so we can attach the signature as a real image file
+  const fd=new FormData();
+  fd.append("_subject","Helios Test — "+(document.getElementById("cN").value||"Anonymous"));
+  fd.append("name",document.getElementById("cN").value);
+  fd.append("email",document.getElementById("cE").value);
+  fd.append("timestamp",new Date().toISOString());
   S.forEach(s=>s.q.forEach(([id])=>{
     const sel=document.querySelector('input[name="q_'+id+'"]:checked');
-    data["rating_"+id.toUpperCase()]=sel?sel.value:"—";
+    fd.append("rating_"+id.toUpperCase(),sel?sel.value:"—");
   }));
-  data.scene_preference=(document.getElementById("sp")||{}).value||"";
-  data.liked_most=document.getElementById("o1").value||"";
-  data.would_change=document.getElementById("o2").value||"";
-  data.confusing=document.getElementById("o3").value||"";
-  data.would_use=document.getElementById("o4").value||"";
-  data.signature_captured=sgn?"Yes":"No";
-  data.signature_image=sgn?cv.toDataURL("image/png"):"";
+  fd.append("scene_preference",(document.getElementById("sp")||{}).value||"");
+  fd.append("liked_most",document.getElementById("o1").value||"");
+  fd.append("would_change",document.getElementById("o2").value||"");
+  fd.append("confusing",document.getElementById("o3").value||"");
+  fd.append("would_use",document.getElementById("o4").value||"");
+  fd.append("signature_captured",sgn?"Yes":"No");
+
+  // Attach signature as a real PNG file — shows as image attachment in Formspree email
+  await new Promise(resolve=>{
+    if(!sgn||!sigData){resolve();return;}
+    cv.toBlob(blob=>{
+      if(blob) fd.append("signature",blob,"signature.png");
+      resolve();
+    },"image/png");
+  });
 
   try{
     const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
-      method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify(data)
+      method:"POST",headers:{"Accept":"application/json"},
+      body:fd  // No Content-Type header — browser sets it with boundary for multipart
     });
     if(res.ok){go(5);return}
   }catch(e){}
-  // Fallback
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  // Fallback — download responses as JSON if submit fails
+  const fallback={};fd.forEach((v,k)=>fallback[k]=v);
+  const blob=new Blob([JSON.stringify(fallback,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");
   a.href=url;a.download="helios-"+Date.now()+".json";a.click();URL.revokeObjectURL(url);
   go(5);
