@@ -360,14 +360,14 @@ window.addEventListener("resize",initSig);
 document.addEventListener('touchstart',function(){},{passive:true});
 
 function sigViewerURL(){
-  // Downscale signature to 400x150 before encoding to keep URL compact
+  // Use a small canvas + JPEG to keep the URL under ~15KB
   const out=document.createElement("canvas");
-  out.width=400;out.height=150;
+  out.width=280;out.height=80;
   const octx=out.getContext("2d");
   octx.fillStyle="#111111";
-  octx.fillRect(0,0,400,150);
-  octx.drawImage(cv,0,0,400,150);
-  const b64=out.toDataURL("image/png");
+  octx.fillRect(0,0,280,80);
+  octx.drawImage(cv,0,0,280,80);
+  const b64=out.toDataURL("image/jpeg",0.5);
   return"https://helios-user-testing.vercel.app/sig-viewer.html#"+encodeURIComponent(b64);
 }
 
@@ -399,8 +399,14 @@ async function submit(){
       body:JSON.stringify(data)
     });
     if(res.ok){go(5);return}
-  }catch(e){}
-  go(5);
+    // Formspree returned an error — show it to the user
+    throw new Error("Server error "+res.status);
+  }catch(e){
+    btn.textContent="Submit";
+    btn.style.opacity="1";
+    btn.style.pointerEvents="auto";
+    alert("Submission failed — please check your connection and try again.");
+  }
 }
 </script>
 </body>
