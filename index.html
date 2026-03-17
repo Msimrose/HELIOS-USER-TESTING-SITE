@@ -364,7 +364,7 @@ function sigViewerURL(){
   const out=document.createElement("canvas");
   out.width=400;out.height=150;
   const octx=out.getContext("2d");
-  octx.fillStyle="#ffffff";
+  octx.fillStyle="#111111";
   octx.fillRect(0,0,400,150);
   octx.drawImage(cv,0,0,400,150);
   const b64=out.toDataURL("image/png");
