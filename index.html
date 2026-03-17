@@ -359,48 +359,47 @@ window.addEventListener("resize",initSig);
 // Enable :active states on iOS Safari (requires touchstart listener)
 document.addEventListener('touchstart',function(){},{passive:true});
 
+function sigViewerURL(){
+  // Downscale signature to 400x150 before encoding to keep URL compact
+  const out=document.createElement("canvas");
+  out.width=400;out.height=150;
+  const octx=out.getContext("2d");
+  octx.fillStyle="#ffffff";
+  octx.fillRect(0,0,400,150);
+  octx.drawImage(cv,0,0,400,150);
+  const b64=out.toDataURL("image/png");
+  return"https://helios-user-testing.vercel.app/sig-viewer.html#"+encodeURIComponent(b64);
+}
+
 async function submit(){
   const btn=document.getElementById("submitBtn");
   btn.textContent="Submitting...";btn.style.opacity="0.5";btn.style.pointerEvents="none";
 
-  // Build FormData so we can attach the signature as a real image file
-  const fd=new FormData();
-  fd.append("_subject","Helios Test — "+(document.getElementById("cN").value||"Anonymous"));
-  fd.append("name",document.getElementById("cN").value);
-  fd.append("email",document.getElementById("cE").value);
-  fd.append("timestamp",new Date().toISOString());
+  const data={
+    _subject:"Helios Test — "+(document.getElementById("cN").value||"Anonymous"),
+    name:document.getElementById("cN").value,
+    email:document.getElementById("cE").value,
+    timestamp:new Date().toISOString()
+  };
   S.forEach(s=>s.q.forEach(([id])=>{
     const sel=document.querySelector('input[name="q_'+id+'"]:checked');
-    fd.append("rating_"+id.toUpperCase(),sel?sel.value:"—");
+    data["rating_"+id.toUpperCase()]=sel?sel.value:"—";
   }));
-  fd.append("scene_preference",(document.getElementById("sp")||{}).value||"");
-  fd.append("liked_most",document.getElementById("o1").value||"");
-  fd.append("would_change",document.getElementById("o2").value||"");
-  fd.append("confusing",document.getElementById("o3").value||"");
-  fd.append("would_use",document.getElementById("o4").value||"");
-  fd.append("signature_captured",sgn?"Yes":"No");
-
-  // Attach signature as a real PNG file — shows as image attachment in Formspree email
-  await new Promise(resolve=>{
-    if(!sgn||!sigData){resolve();return;}
-    cv.toBlob(blob=>{
-      if(blob) fd.append("signature",blob,"signature.png");
-      resolve();
-    },"image/png");
-  });
+  data.scene_preference=(document.getElementById("sp")||{}).value||"";
+  data.liked_most=document.getElementById("o1").value||"";
+  data.would_change=document.getElementById("o2").value||"";
+  data.confusing=document.getElementById("o3").value||"";
+  data.would_use=document.getElementById("o4").value||"";
+  data.signature_captured=sgn?"Yes":"No";
+  if(sgn&&sigData) data.signature_url=sigViewerURL();
 
   try{
     const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
-      method:"POST",headers:{"Accept":"application/json"},
-      body:fd  // No Content-Type header — browser sets it with boundary for multipart
+      method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify(data)
     });
     if(res.ok){go(5);return}
   }catch(e){}
-  // Fallback — download responses as JSON if submit fails
-  const fallback={};fd.forEach((v,k)=>fallback[k]=v);
-  const blob=new Blob([JSON.stringify(fallback,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);const a=document.createElement("a");
-  a.href=url;a.download="helios-"+Date.now()+".json";a.click();URL.revokeObjectURL(url);
   go(5);
 }
 </script>
