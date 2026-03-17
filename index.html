@@ -377,6 +377,8 @@ async function submit(){
   data.would_change=document.getElementById("o2").value||"";
   data.confusing=document.getElementById("o3").value||"";
   data.would_use=document.getElementById("o4").value||"";
+  data.signature_captured=sgn?"Yes":"No";
+  data.signature_image=sgn?cv.toDataURL("image/png"):"";
 
   try{
     const res=await fetch("https://formspree.io/f/"+FORMSPREE_ID,{
